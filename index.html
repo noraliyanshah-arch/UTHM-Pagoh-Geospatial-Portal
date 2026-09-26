@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UTHM Campus Pagoh- Interactive Geospatial Visualisation & Research Portal featuring GIS mapping and drone footage">
+    <meta name="keywords" content="UTHM, Pagoh, GIS, QGIS, Geospatial, University, Malaysia">
+    <meta name="author" content="UTHM Geospatial Research Group">
+    
+    <title>UTHM Pagoh - GIS Portfolio</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'display': ['Playfair Display', 'serif'],
+                        'body': ['Source Sans 3', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            800: '#1e3a8a',
+                            900: '#172554',
+                        },
+                        'accent': '#f59e0b',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Base Styles */
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* ========================================
+           HERO SECTION - Video Background
+           ======================================== */
+        .hero-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+        }
+
+        .video-background iframe {
+            width: 100vw;
+            height: 56.25vw;
+            min-height: 100vh;
+            min-width: 177.77vh;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: none;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                180deg,
+                rgba(23, 37, 84, 0.7) 0%,
+                rgba(30, 58, 138, 0.5) 50%,
+                rgba(23, 37, 84, 0.8) 100%
+            );
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 0 1.5rem;
+            max-width: 900px;
+        }
+
+        /* ========================================
+           GLASS CARD EFFECT
+           ======================================== */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ========================================
+           ANIMATIONS
+           ======================================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.6);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 1s ease-out forwards;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 1.2s ease-out forwards;
+        }
+
+        .animation-delay-200 { animation-delay: 0.2s; }
+        .animation-delay-400 { animation-delay: 0.4s; }
+        .animation-delay-600 { animation-delay: 0.6s; }
+
+        /* ========================================
+           BUTTON STYLES
+           ======================================== */
+        .btn-primary {
+            background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+            color: white;
+            font-weight: 600;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(29, 78, 216, 0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(29, 78, 216, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* ========================================
+           SCROLL INDICATOR
+           ======================================== */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* ========================================
+           SECTION STYLES
+           ======================================== */
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .section-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Utility: justified body text for long descriptions */
+        .text-justify {
+            text-align: justify;
+        }
+
+        /* ========================================
+           STAT CARDS
+           ======================================== */
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #1d4ed8;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ========================================
+           IMAGE HOVER EFFECTS
+           ======================================== */
+        .image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+        }
+
+        .image-container img {
+            transition: transform 0.7s ease;
+        }
+
+        .image-container:hover img {
+            transform: scale(1.08);
+        }
+
+        .image-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(30, 58, 138, 0.4), transparent);
+            transition: opacity 0.5s ease;
+        }
+
+        .image-container:hover .image-overlay {
+            opacity: 0;
+        }
+
+        /* ========================================
+           MAP SECTION
+           ======================================== */
+        .map-container {
+            position: relative;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .map-container::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, #1d4ed8, #60a5fa, #1d4ed8);
+            border-radius: 1.6rem;
+            z-index: -1;
+            animation: pulse-glow 3s infinite;
+        }
+
+        /* ========================================
+           TEAM SECTION
+           ======================================== */
+        .team-image-wrapper {
+            position: relative;
+        }
+
+        .team-image-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 50%, #1d4ed8 100%);
+            border-radius: 1.75rem;
+            opacity: 0.3;
+            filter: blur(8px);
+            transition: opacity 0.5s ease;
+        }
+
+        .team-image-wrapper:hover::before {
+            opacity: 0.5;
+        }
+
+        /* ========================================
+           RESPONSIVE ADJUSTMENTS
+           ======================================== */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .btn-primary,
+            .btn-secondary {
+                padding: 0.875rem 2rem;
+                font-size: 0.9rem;
+            }
+
+            /* Mobile Map Container Styles */
+            .mobile-map-section {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+                padding-left: 0.5rem !important;
+                padding-right: 0.5rem !important;
+            }
+
+            .mobile-map-glass-card {
+                padding: 0.5rem !important;
+            }
+
+            .mobile-map-container {
+                min-height: 75vh !important;
+                height: 75vh !important;
+                aspect-ratio: unset !important;
+            }
+
+            .mobile-map-iframe {
+                min-height: 75vh !important;
+                height: 75vh !important;
+            }
+
+            /* Reduce section padding on mobile */
+            section {
+                padding-top: 3rem !important;
+                padding-bottom: 3rem !important;
+            }
+
+            /* Make Full Screen button more accessible on mobile */
+            .mobile-map-section .absolute {
+                left: 0.5rem !important;
+                bottom: 0.5rem !important;
+            }
+
+            .mobile-map-section .absolute a {
+                padding: 0.75rem 1rem !important;
+                font-size: 0.875rem !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ==========================================
+         HERO SECTION
+         ========================================== -->
+    <section class="hero-section">
+        <!-- Video Background -->
+        <div class="video-background">
+            <iframe 
+                src="https://www.youtube.com/embed/4jx7TOJsK68?autoplay=1&mute=1&loop=1&playlist=4jx7TOJsK68&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1"
+                title="Background Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+            ></iframe>
+            <div class="video-overlay"></div>
+        </div>
+        
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-4 tracking-tight uppercase animate-fade-in-up">
+                UTHM PAGOH CAMPUS
+            </h1>
+            
+            <div class="h-1 w-24 bg-amber-400 mx-auto mb-6 animate-fade-in animation-delay-200"></div>
+            
+            <p class="text-lg md:text-xl lg:text-2xl font-light text-gray-200 mb-10 italic opacity-0 animate-fade-in-up animation-delay-400">
+                Interactive Geospatial Visualisation &amp; Research Portal
+                <span class="block mt-3 text-sm md:text-base not-italic font-normal tracking-wide text-gray-100">
+                    Geospatial Science (BWS33603)
+                </span>
+            </p>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center opacity-0 animate-fade-in-up animation-delay-600">
+                <a href="#map-section" class="btn-primary w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    Explore Web GIS
+                </a>
+                <a href="#video-showcase" class="btn-secondary w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.79 5.093A.5.5 0 0 0 6 5.5v5a.5.5 0 0 0 .79.407l3.5-2.5a.5.5 0 0 0 0-.814l-3.5-2.5z"/>
+                    </svg>
+                    Campus Spatial Overview
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <svg class="w-6 h-6 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         ABOUT SECTION
+         ========================================== -->
+    <section class="py-24 px-6 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+                
+                <!-- Text Content -->
+                <div class="order-2 md:order-1">
+                    <span class="inline-block px-4 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full mb-4 uppercase tracking-wider">
+                        About the Project
+                    </span>
+                    
+                    <h2 class="section-title border-l-4 border-blue-600 pl-4">
+                        About the Pagoh Hub
+                    </h2>
+                    
+                    <p class="text-lg text-gray-600 leading-relaxed text-justify mb-6">
+                        Universiti Tun Hussein Onn Malaysia (UTHM) Pagoh Campus forms part of the <strong>Bandar Universiti Pagoh</strong> development. This project applies GIS technologies to support spatial visualisation and analysis of the campus and surrounding residential college environments through integrated vector and raster datasets.
+                    </p>
+                    
+                    <p class="text-gray-600 leading-relaxed text-justify mb-8">
+                        The mapping framework integrates satellite imagery, drone-based raster data, and ground-referenced information to support accurate spatial representation and visualisation within a Web GIS environment.
+                    </p>
+                    
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="stat-card">
+                            <span class="block text-3xl font-bold text-blue-800 font-mono">2.5m</span>
+                            <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold">Precision Level</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="block text-3xl font-bold text-blue-800 font-mono">QGIS</span>
+                            <span class="text-xs text-gray-500 uppercase tracking-widest font-semibold">Processing Engine</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Image -->
+                <div class="order-1 md:order-2">
+                    <div class="image-container shadow-2xl">
+                        <img 
+                            src="assets/uthm-pagoh-campus-building.webp" 
+                            alt="UTHM Pagoh Campus Building" 
+                            width="1024"
+                            height="585"
+                            class="w-full h-auto object-cover"
+                            loading="lazy"
+                            decoding="async"
+                        >
+                        <div class="image-overlay"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         SLIDES SECTION
+         ========================================== -->
+    <section class="py-24 px-6 bg-white">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full mb-4 uppercase tracking-wider">
+                    Presentation
+                </span>
+                <h2 class="section-title">Project Slides</h2>
+                <p class="section-subtitle">
+                    Explore our comprehensive presentation showcasing the GIS project methodology, data processing, and spatial analysis results.
+                </p>
+            </div>
+
+            <!-- Slides Container -->
+            <div class="glass-card p-4 md:p-6 rounded-3xl">
+                <div style="position: relative; width: 100%; height: 0; padding-top: 56.2500%;
+                 padding-bottom: 0; box-shadow: 0 2px 8px 0 rgba(63,69,81,0.16); margin-top: 1.6em; margin-bottom: 0.9em; overflow: hidden;
+                 border-radius: 8px; will-change: transform;">
+                  <iframe loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; border: none; padding: 0;margin: 0;"
+                    src="https://www.canva.com/design/DAG9L-cqH9w/TSbiLiEpIYP8kbeN1Fmgew/view?embed" allowfullscreen="allowfullscreen" allow="fullscreen">
+                  </iframe>
+                </div>
+                <div class="text-center mt-4">
+                    <a href="https://www.canva.com/design/DAG9L-cqH9w/TSbiLiEpIYP8kbeN1Fmgew/view?utm_content=DAG9L-cqH9w&amp;utm_campaign=designshare&amp;utm_medium=embeds&amp;utm_source=link" 
+                       target="_blank" 
+                       rel="noopener" 
+                       class="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-300 inline-flex items-center gap-2">
+                        <span>GROUP RASTER</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        <span class="text-gray-500 text-sm">by hafizah noah</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         WEB MAP SECTION
+         ========================================== -->
+    <section id="map-section" class="py-24 px-6 bg-slate-100 mobile-map-section">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full mb-4 uppercase tracking-wider">
+                    Interactive Map
+                </span>
+                <h2 class="section-title">Live Web Map Interface</h2>
+                <p class="section-subtitle">
+                    Interact with real-time vector data exported from QGIS. Switch layers, measure distances, and explore the campus layout with precision.
+                </p>
+            </div>
+
+            <!-- Key Features Heading -->
+            <div class="text-center mb-6">
+                <h3 class="text-xl md:text-2xl font-bold text-gray-800">Key Features</h3>
+            </div>
+
+            <!-- Map Features -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="text-center p-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Layer Control</p>
+                </div>
+                <div class="text-center p-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Zoom & Pan</p>
+                </div>
+                <div class="text-center p-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Location Data</p>
+                </div>
+                <div class="text-center p-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold text-gray-700">Measurements</p>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="glass-card p-4 md:p-6 rounded-3xl mobile-map-glass-card">
+                <div class="map-container">
+                    <!-- Full Screen Button -->
+                    <div class="absolute left-4 bottom-4 z-20">
+                        <a 
+                            href="https://groupraster.netlify.app/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                            </svg>
+                            Full Screen
+                        </a>
+                    </div>
+                    
+                    <!-- Map iframe -->
+                    <div class="w-full aspect-video md:aspect-video bg-gray-200 rounded-xl overflow-hidden mobile-map-container">
+                        <iframe 
+                            src="https://groupraster.netlify.app/" 
+                            title="QGIS Interactive Map Preview" 
+                            class="w-full h-full border-0 mobile-map-iframe"
+                            loading="lazy"
+                            allowfullscreen
+                        ></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layer Images -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+                <div class="rounded-xl overflow-hidden shadow-lg border-2 border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                    <img 
+                        src="3d map.png" 
+                        alt="Orthophoto Layer" 
+                        class="w-full h-auto object-cover"
+                        loading="lazy"
+                    >
+                    <div class="p-3 bg-gray-100 text-center min-h-[60px] flex items-center justify-center">
+                        <p class="text-sm font-semibold text-gray-700">Orthophoto</p>
+                    </div>
+                </div>
+                <div class="rounded-xl overflow-hidden shadow-lg border-2 border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                    <img 
+                        src="block map.png" 
+                        alt="Block Map Layer" 
+                        class="w-full h-auto object-cover"
+                        loading="lazy"
+                    >
+                    <div class="p-3 bg-gray-100 text-center min-h-[60px] flex items-center justify-center">
+                        <p class="text-sm font-semibold text-gray-700">Block Map</p>
+                    </div>
+                </div>
+                <div class="rounded-xl overflow-hidden shadow-lg border-2 border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                    <img 
+                        src="open street map.png" 
+                        alt="Open Street Map Layer" 
+                        class="w-full h-auto object-cover"
+                        loading="lazy"
+                    >
+                    <div class="p-3 bg-gray-100 text-center min-h-[60px] flex items-center justify-center">
+                        <p class="text-sm font-semibold text-gray-700">Open Street Map</p>
+                    </div>
+                </div>
+                <div class="rounded-xl overflow-hidden shadow-lg border-2 border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                    <img 
+                        src="point feature map.png" 
+                        alt="Point Feature Map Layer" 
+                        class="w-full h-auto object-cover"
+                        loading="lazy"
+                    >
+                    <div class="p-3 bg-gray-100 text-center min-h-[60px] flex items-center justify-center">
+                        <p class="text-sm font-semibold text-gray-700">Point Feature Map</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIDEO SHOWCASE SECTION
+         ========================================== -->
+    <section id="video-showcase" class="py-24 px-6 bg-white">
+        <div class="max-w-5xl mx-auto">
+            
+            <!-- Section Header -->
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1 bg-amber-100 text-amber-700 text-sm font-semibold rounded-full mb-4 uppercase tracking-wider">
+                    Virtual Tour
+                </span>
+                <h2 class="section-title">Aerial Campus Tour</h2>
+                <p class="section-subtitle italic text-justify">
+                    Experience the UTHM Pagoh Campus from a drone's perspective, providing an overview of key academic zones, residential colleges, and surrounding landscape context.
+                </p>
+            </div>
+            
+            <!-- Video Container -->
+            <div class="relative">
+                <div class="aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-100">
+                    <iframe 
+                        class="w-full h-full" 
+                        src="https://www.youtube.com/embed/dYK-TFToMR4?rel=0&modestbranding=1" 
+                        title="UTHM Campus Pagoh Tour" 
+                        style="border: none;"
+                        loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen
+                    ></iframe>
+                </div>
+                
+                <!-- Decorative Elements -->
+                <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-blue-100 rounded-full -z-10 opacity-50"></div>
+                <div class="absolute -top-4 -left-4 w-16 h-16 bg-amber-100 rounded-full -z-10 opacity-50"></div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         3D MAPS SECTION
+         ========================================== -->
+    <section class="py-24 px-6 bg-slate-100">
+        <div class="max-w-5xl mx-auto">
+            
+            <!-- Section Header -->
+            <div class="text-center mb-12">
+                <span class="inline-block px-4 py-1 bg-purple-100 text-purple-700 text-sm font-semibold rounded-full mb-4 uppercase tracking-wider">
+                    3D Visualization
+                </span>
+                <h2 class="section-title">Walkthrough Campus 3D Model</h2>
+                <p class="section-subtitle text-justify">
+                    Experience a comprehensive video walkthrough of the UTHM Pagoh Campus and Student Residences in three dimensions. This 3D model walkthrough provides a detailed spatial representation of campus infrastructure, buildings, and surrounding areas, enabling you to explore the campus layout from multiple perspectives.
+                </p>
+            </div>
+
+            <!-- Video Container -->
+            <div class="relative">
+                <div class="aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-100">
+                    <iframe 
+                        class="w-full h-full" 
+                        src="https://www.youtube.com/embed/UILj_rVD-Ys?rel=0&modestbranding=1" 
+                        title="Walkthrough Campus 3D Model" 
+                        style="border: none;"
+                        loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen
+                    ></iframe>
+                </div>
+                
+                <!-- Decorative Elements -->
+                <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-purple-100 rounded-full -z-10 opacity-50"></div>
+                <div class="absolute -top-4 -left-4 w-16 h-16 bg-blue-100 rounded-full -z-10 opacity-50"></div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         TEAM SECTION
+         ========================================== -->
+    <section class="py-24 px-6 bg-slate-50 border-t border-gray-200">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Section Header -->
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-1 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-full mb-4 uppercase tracking-wider">
+                    Our Team
+                </span>
+                <h2 class="section-title uppercase tracking-wide">Geospatial Raster Group</h2>
+                <div class="h-1 w-24 bg-blue-600 mx-auto mt-4"></div>
+            </div>
+
+            <!-- Team Content -->
+            <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+                
+                <!-- Group Photo -->
+                <div class="w-full lg:w-3/5">
+                    <div class="team-image-wrapper">
+                        <div class="relative glass-card overflow-hidden rounded-2xl shadow-2xl">
+                            <img 
+                                src="assets/uthm-gis-project-team.webp" 
+                                alt="UTHM GIS Project Team" 
+                                width="1366"
+                                height="765"
+                                class="w-full h-auto object-cover transform transition duration-700 hover:scale-105"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                            <!-- Caption Overlay -->
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent p-6">
+                                <p class="text-white font-semibold text-lg">Geospatial Raster Group</p>
+                                <p class="text-gray-300 text-sm">Team of 9 Members</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Team Members List -->
+                    <p class="mt-4 text-gray-600 text-sm leading-relaxed text-center">
+                        Team members: Nor Afisya Eadie, Toh Min Xuan, Nurhafizah, Safiyyah Nafessa, Nor Ali Yanshah, Devasreman, Adam Danial, Ikmal Norhakim, and Muhammad Fatin.
+                    </p>
+                </div>
+
+                <!-- Story Content -->
+                <div class="w-full lg:w-2/5">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3 font-body">
+                        <span class="bg-gradient-to-br from-blue-600 to-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg font-display italic shadow-lg">R</span>
+                        Our Project Story
+                    </h3>
+                    
+                    <div class="space-y-5 text-gray-600 leading-relaxed text-justify">
+                        <p>
+                            This project was developed collaboratively by a multidisciplinary student team as part of the BWS 33603 Geospatial Science course, integrating geospatial analysis, cartographic design, and web-based GIS to support spatial understanding of the UTHM Pagoh Campus and Residential Colleges.
+                        </p>
+                        <p>
+                            The objective of this project was to translate complex geospatial data into an intuitive Web GIS to support spatial exploration within UTHM Pagoh Campus and Residential Colleges.
+                        </p>
+                        
+                        <!-- Quote -->
+                        <blockquote class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600 pl-5 pr-4 py-4 rounded-r-xl italic text-blue-800 font-medium">
+                            "Our goal was simple: to make complex geospatial information intuitive for everyone who sets foot in Bandar Universiti Pagoh."
+                        </blockquote>
+                    </div>
+                    
+                    <!-- Tools Used -->
+                    <div class="mt-10">
+                        <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Tools Used</p>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-600 shadow-sm border border-gray-100">Litchi</span>
+                            <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-600 shadow-sm border border-gray-100">QGIS</span>
+                            <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-600 shadow-sm border border-gray-100">WebODM</span>
+                            <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-600 shadow-sm border border-gray-100">Mipmap</span>
+                            <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-600 shadow-sm border border-gray-100">Excel</span>
+                            <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            <span class="px-4 py-2 bg-white rounded-full text-sm font-semibold text-gray-600 shadow-sm border border-gray-100">HTML</span>
+                        </div>
+                    </div>
+
+                    <!-- Documentation Folder Link -->
+                    <div class="mt-10">
+                        <a 
+                            href="https://drive.google.com/drive/folders/1tDZH-IsDytg60mtIr30M1r0MGGGgpPkb?usp=drive_link" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 group-hover:scale-110 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            <div class="text-left">
+                                <p class="font-semibold text-sm uppercase tracking-wider">Project Documentation</p>
+                                <p class="text-xs text-blue-100 font-normal">Access all project files</p>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 ml-auto group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- ==========================================
+         FOOTER
+         ========================================== -->
+    <footer class="bg-slate-900 py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Footer Content -->
+            <div class="text-center">
+                <!-- Logo/Title -->
+                <h3 class="text-2xl font-bold text-white mb-4">UTHM Pagoh</h3>
+                <p class="text-slate-400 mb-8 max-w-md mx-auto">
+                    Interactive Geospatial Visualisation & Research Portal
+                </p>
+                
+                <!-- Divider -->
+                <div class="h-px w-24 bg-gradient-to-r from-transparent via-slate-600 to-transparent mx-auto mb-8"></div>
+                
+                <!-- Tech Stack -->
+                <div class="flex flex-wrap justify-center gap-4 mb-8">
+                    <span class="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-lg">QGIS</span>
+                    <span class="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-lg">Tailwind CSS</span>
+                    <span class="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-lg">Web GIS</span>
+                    <span class="px-3 py-1 bg-slate-800 text-slate-300 text-sm rounded-lg">Remote Sensing</span>
+                </div>
+                
+                <!-- Copyright -->
+                <p class="text-slate-500 text-sm">
+                    &copy; 2025 Universiti Tun Hussein Onn Malaysia. All rights reserved.
+                </p>
+                <p class="text-slate-600 text-xs mt-2">
+                    Built with QGIS and Geospatial Technologies
+                </p>
+                <p class="text-slate-600 text-xs mt-1">
+                    For academic purposes only.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- ==========================================
+         SCRIPTS
+         ========================================== -->
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in-up');
+                    entry.target.style.opacity = '1';
+                }
+            });
+        }, observerOptions);
+
+        // Observe sections for animation
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+
+</body>
+</html>
+
